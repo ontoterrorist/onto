@@ -196,10 +196,18 @@ h2[data-t]::after{color:#00d5ff;translate:3px 0;clip-path:inset(0 0 100% 0);anim
 .sentencia + .sentencia{margin-bottom:clamp(40px,8vh,90px)}
 .cierre .pie{position:relative;z-index:9}
 
+.hondo .escena{display:none}
 @media (max-width:700px){
   .hondo .col,.hondo.der .col,.fin .col{grid-column:1/-1}
   .fin{align-content:end;padding-bottom:10vh}
   .susurro{white-space:normal;max-width:60vw}
+  /* el texto se lee sobre las aves: un halo oscuro lo despega */
+  .hondo .col *,.fin .linea{text-shadow:0 0 3px #000,0 0 10px #000,0 0 18px rgba(0,0,0,.8),calc(var(--ab) * -1.7px) 0 rgba(255,30,50,calc(var(--ab) * .5)),calc(var(--ab) * 1.7px) 0 rgba(0,210,255,calc(var(--ab) * .24))}
+  /* la figura (rostro, regreso) tiene su propio hueco entre los textos */
+  .hondo{min-height:0;padding-bottom:clamp(24px,6vw,48px)}
+  .hondo .escena{display:block;grid-column:1/-1;height:min(52svh,420px);margin-top:20px}
+  /* los mandos no tapan el texto */
+  .mandos{bottom:8px;right:8px;gap:14px;padding:0 10px;background:rgba(0,0,0,.7);border-radius:2px}
 }
 @media (prefers-reduced-motion:reduce){
   h2[data-t],h2[data-t]::before,h2[data-t]::after,.hondo .lead{animation:none}
@@ -338,7 +346,8 @@ window.ONTO = { d: 0, ink: '236,235,230', quieto: 0, rojo: 0, apagon: 0, activa:
       <p data-rev style="--i:2">Se llama síndrome de Capgras. Hay otro, el de Cotard, en que alguien sostiene con total calma que está muerto. La neurología tiene nombres para estas cosas. Los nombres no ayudan.</p>
       <p data-rev style="--i:3">Cuando alguien dice «estoy muerto», ¿quién lo dice? Cuando miras un rostro y todo en él es correcto, y aun así sabes que no es, ¿con qué lo sabes?</p>
     </div>
-    <span class="susurro" aria-hidden="true" data-u=".6" style="left:5%;top:88%;--r:-2deg">es casi ella</span>
+    <div class="escena" data-f="rostro" aria-hidden="true"></div>
+    <span class="susurro" aria-hidden="true" data-u=".6"style="left:5%;top:88%;--r:-2deg">es casi ella</span>
     <span class="susurro" aria-hidden="true" data-u=".64" style="left:44%;top:14%;--r:3deg">estoy muerto</span>
   </section>
 
@@ -349,7 +358,8 @@ window.ONTO = { d: 0, ink: '236,235,230', quieto: 0, rojo: 0, apagon: 0, activa:
       <p data-rev style="--i:2">Pero entonces ese alguien necesita, dentro de sí, a otro que mire. Y ese, a otro más. Es el regreso al infinito, y la filosofía lo conoce desde hace siglos como un error de método.</p>
       <p data-rev style="--i:3">En el fondo hay una última habitación. Alguien está sentado allí, de espaldas, leyendo esta frase. Sabe que llegaste hasta aquí.</p>
     </div>
-    <span class="susurro" aria-hidden="true" data-u=".7" style="left:52%;top:20%;--r:-2deg">más abajo</span>
+    <div class="escena" data-f="abismo" aria-hidden="true"></div>
+    <span class="susurro" aria-hidden="true" data-u=".7"style="left:52%;top:20%;--r:-2deg">más abajo</span>
     <span class="susurro" aria-hidden="true" data-u=".74" style="right:8%;top:80%;--r:2deg">alguien de espaldas</span>
   </section>
 
@@ -660,18 +670,33 @@ const RINGS = 9;
 const geo = { dom: '', w: 0, cols: 1, cx: 0, cy: 0, R: 1, a: 1, b: 1, ix: 0, iy: 0, abre: 1, cum: new Float32Array(RINGS), om: new Float32Array(RINGS) };
 const TO = [0, 0];
 const lp = (p, q, k) => p + (q - p) * k;
+// en el teléfono la figura se dibuja en un hueco propio, entre los textos
+const escenas = [...document.querySelectorAll('.escena')];
+function escena(dom){
+  let mejor = null, d0 = 1e9;
+  for (const e of escenas){
+    if (e.dataset.f !== dom) continue;
+    const r = e.getBoundingClientRect();
+    if (!r.height) continue;
+    const dd = Math.abs(r.top + r.height / 2 - H / 2);
+    if (dd < d0){ d0 = dd; mejor = r; }
+  }
+  return mejor;
+}
 function prepararObjetivo(){
   let dom = '', w = 0;
   for (const k of OBJ) if (F[k] > w){ w = F[k]; dom = k; }
   geo.dom = dom; geo.w = w;
   if (!dom) return;
   const m = ONTO.mira, ph = phone();
+  const hueco = ph && (dom === 'rostro' || dom === 'abismo') ? escena(dom) : null;
   if (dom === 'cuadricula') geo.cols = Math.ceil(Math.sqrt(N * W / H));
   else if (dom === 'rostro'){
-    geo.cx = ph ? W * .5 : W * .7; geo.cy = ph ? H * .42 : H * .5;
-    geo.R = ph ? Math.min(W * .36, H * .27) : Math.min(W * .26, H * .37);
+    if (hueco){ geo.cx = W * .5; geo.cy = hueco.top + hueco.height / 2; geo.R = Math.min(W * .36, hueco.height * .46); }
+    else { geo.cx = ph ? W * .5 : W * .7; geo.cy = ph ? H * .42 : H * .5; geo.R = ph ? Math.min(W * .36, H * .27) : Math.min(W * .26, H * .37); }
   } else if (dom === 'abismo'){
-    geo.cx = ph ? W * .5 : W * .66; geo.cy = H * .5; geo.R = Math.min(W, H) * (ph ? .42 : .46);
+    if (hueco){ geo.cx = W * .5; geo.cy = hueco.top + hueco.height / 2; geo.R = Math.min(W * .46, hueco.height * .48); }
+    else { geo.cx = ph ? W * .5 : W * .66; geo.cy = H * .5; geo.R = Math.min(W, H) * (ph ? .42 : .46); }
     let s = 0; for (let k = 0; k < RINGS; k++) s += Math.pow(.74, k);
     let c = 0; for (let k = 0; k < RINGS; k++){ c += Math.pow(.74, k) / s; geo.cum[k] = c; geo.om[k] = (k % 2 ? 1 : -1) * .00032 * (1 + k * .55); }
   } else if (dom === 'ojo'){
@@ -952,7 +977,7 @@ function paso(dt){
 
 /* ---------- dibujo ---------- */
 function dibujar(estela){
-  const INK = ONTO.ink, mira = ONTO.mira, rojo = ONTO.rojo, apuntan = F.cuadricula > .5, Qv = ONTO.quieto;
+  const INK = ONTO.ink, mira = ONTO.mira, rojo = ONTO.rojo, apuntan = F.cuadricula > .5, Qv = ONTO.quieto, tel = phone();
   if (estela){ ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, 0, W, H); }
   else { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); }
   const esc = phone() ? .85 : 1;
@@ -970,6 +995,7 @@ function dibujar(estela){
         if (posada){
           const a = 1.6 + s * 1.4;
           if (apuntan){ const an = Math.atan2(mira.y - y, mira.x - x); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(an) * a * 1.8, y + Math.sin(an) * a * 1.8); }
+          else if (tel && (F.nombre > .5 || F.frase > .5)){ const an = ph[i] * 7; ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(an) * a * 1.3, y + Math.sin(an) * a * 1.3); }
           else { ctx.moveTo(x, y - a); ctx.lineTo(x, y + a * .25); }
         }
         continue;
@@ -985,7 +1011,7 @@ function dibujar(estela){
       ctx.lineTo(hx, hy);
       ctx.lineTo(bx + si * env, by - c * env);
     }
-    ctx.strokeStyle = pase === 0 ? `rgba(${INK},.48)` : pase === 1 ? `rgba(${INK},.92)` : pase === 3 ? `rgba(200,24,34,${(.5 + .45 * rojo).toFixed(2)})` : `rgb(${INK})`;
+    ctx.strokeStyle = pase === 0 ? `rgba(${INK},.48)` : pase === 1 ? `rgba(${INK},.92)` : pase === 3 ? `rgba(200,24,34,${(.5 + .45 * rojo).toFixed(2)})` : (apuntan && tel ? `rgba(${INK},.5)` : `rgb(${INK})`);
     ctx.lineWidth = pase === 0 ? 1 : pase === 1 ? 1.35 : pase === 3 ? 1.5 : 1.7;
     ctx.stroke();
   }
@@ -1233,6 +1259,8 @@ function luz(tms){
   let A = .965 * Math.pow(sm(.1, .88, d), 1.05);
   let R = lerp(2600, 245, sm(.14, .92, d));
   const fo = O.F.ojo; A *= 1 - .5 * fo; R += 420 * fo;
+  // en el teléfono no hay cursor que pasee la luz: la oscuridad es más suave y el haz más ancho
+  if (W <= 700){ A *= .48; R = Math.max(R, 340); }
   let sx = 0, sy = 0;
   if (!reduce){
     R *= 1 + .025 * Math.sin(tms * .0031) + .018 * Math.sin(tms * .0089 + 1);
