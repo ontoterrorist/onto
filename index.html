@@ -220,6 +220,7 @@ h2[data-t]::after{color:#00d5ff;translate:3px 0;clip-path:inset(0 0 100% 0);anim
   /* la figura (rostro, regreso) tiene su propio hueco entre los textos */
   .hondo{min-height:0;padding-bottom:clamp(24px,6vw,48px)}
   .hondo .escena{display:block;grid-column:1/-1;height:min(52svh,420px);margin-top:20px}
+  .hondo .escena[data-f="insercion"]{height:min(66svh,560px)}
   /* los mandos no tapan el texto */
   .mandos{bottom:8px;right:8px;gap:14px;padding:0 10px;background:rgba(0,0,0,.7);border-radius:2px}
 }
@@ -486,7 +487,7 @@ const SETS = {
   abismo:     { sep: .1,  ali: 0,   coh: 0,   r: 14, vmax: 7,   vmin: 0 },
   frase:      { sep: .15, ali: .1,  coh: 0,   r: 14, vmax: 12,  vmin: 0 },
   ojo:        { sep: .1,  ali: 0,   coh: 0,   r: 14, vmax: 9,   vmin: 0 },
-  insercion:  { sep: .5,  ali: .2,  coh: 0,   r: 20, vmax: 6.5, vmin: 0 },
+  insercion:  { sep: .06, ali: 0,   coh: 0,   r: 12, vmax: 7,   vmin: 0 },
 };
 const KEYS = Object.keys(SETS);
 // sin ancla en la dirección se entra por el nombre: las aves salen ya rumbo a las letras
@@ -729,8 +730,8 @@ function prepararObjetivo(){
     let s = 0; for (let k = 0; k < RINGS; k++) s += Math.pow(.74, k);
     let c = 0; for (let k = 0; k < RINGS; k++){ c += Math.pow(.74, k) / s; geo.cum[k] = c; geo.om[k] = (k % 2 ? 1 : -1) * .00032 * (1 + k * .55); }
   } else if (dom === 'insercion'){
-    if (hueco){ geo.R = Math.min(W * .15, hueco.height * .24); geo.cx = W * .5; geo.cy = hueco.top + hueco.height / 2 - geo.R; }
-    else { geo.R = Math.min(W * .13, H * .2); geo.cx = W * .24; geo.cy = H * .5 - geo.R; }
+    if (hueco){ geo.fh = Math.min(hueco.height * .97, W * .92 / .609); geo.fw = geo.fh * .609; geo.cx = W * .5; geo.cy = hueco.top + hueco.height / 2; }
+    else { geo.fh = H * .86; geo.fw = geo.fh * .609; geo.cx = W * .25; geo.cy = H * .5; }
   } else if (dom === 'ojo'){
     const ahora = performance.now();
     geo.cx = W * (ph ? .5 : .58); geo.cy = H * (ph ? .27 : .46);
@@ -766,51 +767,52 @@ const cl = (x, a, b) => x < a ? a : x > b ? b : x;
 const hh = k => { const v = Math.sin(k * 12.9898) * 43758.5453; return v - Math.floor(v); };
 const lidU = s => geo.cy - geo.bu * (1 - s * s) * (1 - .16 * s) + s * geo.tilt;
 const lidL = s => geo.cy + geo.bl * .8 * Math.pow(Math.max(0, 1 - s * s), 1.1) + s * geo.tilt;
-// perfil de una persona de lado (en unidades de R, origen en el centro de la cabeza, mira a la izquierda)
+// «Worn Out» (Van Gogh, 1882, dominio público), trazado a mano como líneas sobre el dibujo original (580 x 952 px).
+// Cada trazo se resamplea cada ~3 px y todo se baraja: así cualquier prefijo de aves dibuja la figura entera.
 const catmull = (p0, p1, p2, p3, t) => { const t2 = t * t, t3 = t2 * t; return .5 * ((2 * p1) + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (-p0 + 3 * p1 - 3 * p2 + p3) * t3); };
-function curva(P, n){
+function trazo(P, paso, out){
   const d = [], m = P.length;
   for (let i = 0; i < m - 1; i++){
     const p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[i + 1], p3 = P[Math.min(m - 1, i + 2)];
-    for (let k = 0; k < 16; k++){ const u = k / 16; d.push(catmull(p0[0], p1[0], p2[0], p3[0], u), catmull(p0[1], p1[1], p2[1], p3[1], u)); }
+    for (let k = 0; k < 14; k++){ const u = k / 14; d.push(catmull(p0[0], p1[0], p2[0], p3[0], u), catmull(p0[1], p1[1], p2[1], p3[1], u)); }
   }
   d.push(P[m - 1][0], P[m - 1][1]);
-  const np = d.length / 2, cum = [0];
-  for (let i = 1; i < np; i++) cum.push(cum[i - 1] + Math.hypot(d[2 * i] - d[2 * i - 2], d[2 * i + 1] - d[2 * i - 1]));
-  const out = new Float32Array(n * 2), tot = cum[np - 1];
-  let j = 0;
-  for (let k = 0; k < n; k++){
-    const s = tot * k / (n - 1);
-    while (j < np - 2 && cum[j + 1] < s) j++;
-    const u = (s - cum[j]) / ((cum[j + 1] - cum[j]) || 1);
-    out[2 * k] = d[2 * j] + (d[2 * j + 2] - d[2 * j]) * u; out[2 * k + 1] = d[2 * j + 1] + (d[2 * j + 3] - d[2 * j + 1]) * u;
+  let acum = 0, falta = 0;
+  for (let i = 2; i < d.length; i += 2){
+    const dx = d[i] - d[i - 2], dy = d[i + 1] - d[i - 1], l = Math.hypot(dx, dy);
+    acum = l; let t0 = falta;
+    while (t0 <= acum){ const q = t0 / (l || 1); out.push((d[i - 2] + dx * q) / 580, (d[i - 1] + dy * q) / 952); t0 += paso; }
+    falta = t0 - acum;
   }
-  return out;
 }
-const circ = (cx, cy, rx, ry, n) => { const o = new Float32Array(n * 2); for (let k = 0; k < n; k++){ const q = k / n * 6.2832; o[2 * k] = cx + Math.cos(q) * rx; o[2 * k + 1] = cy + Math.sin(q) * ry; } return o; };
-// la figura: una persona de perfil, sin rasgos, encorvada, con una mano sobre la cara y la otra clavada en el cráneo
-const rot = (P, ph) => P.map(q => [q[0] * Math.cos(ph) - q[1] * Math.sin(ph), q[0] * Math.sin(ph) + q[1] * Math.cos(ph)]);
-const unir = L => { const n = L.reduce((t, c) => t + c.length, 0), o = new Float32Array(n); let k = 0; for (const c of L){ o.set(c, k); k += c.length; } return o; };
-const dedo = (b, tp, bul, n) => {   // un dedo en garra: sale de la palma y se curva hacia el cráneo
-  const dx = tp[0] - b[0], dy = tp[1] - b[1], l = Math.hypot(dx, dy) || 1;
-  return curva([b, [b[0] + dx * .55 - dy / l * bul, b[1] + dy * .55 + dx / l * bul], tp], n);
-};
-const relleno = (cx, cy, rx, ry, n) => { const o = new Float32Array(n * 2); for (let k = 0; k < n; k++){ const q = hh(k * 3.7) * 6.2832, r = Math.sqrt(hh(k * 5.3 + 1)); o[2 * k] = cx + Math.cos(q) * r * rx; o[2 * k + 1] = cy + Math.sin(q) * r * ry; } return o; };
-const HUEVO = [[0,-1],[-.5,-.9],[-.8,-.52],[-.87,0],[-.76,.52],[-.42,.88],[0,.98],[.5,.86],[.88,.46],[.97,0],[.84,-.55],[.46,-.92],[0,-1]];
-const INCL = -.3;                                   // la cabeza cae hacia delante
-const cabeza = rot(HUEVO, INCL);
-const sobre = (pts, k) => rot(pts, INCL).map(q => [q[0] * k, q[1] * k]);
-const tipsLejos = sobre([[-.87,-.2],[-.8,-.52],[-.5,-.9],[-.2,-.98],[.1,-1]], .97);     // frente y coronilla
-const tipsCerca = sobre([[0,-.99],[.46,-.9],[.84,-.55],[.95,-.1],[.86,.4]], .96);        // nuca
-const PERFIL = [
-  curva(cabeza, 240),
-  unir([curva([[-.2,.95],[-.32,1.3],[-.55,1.75]], 40), curva([[.6,.8],[.62,1.2],[.75,1.5]], 36)]),
-  unir([curva([[.75,1.5],[1.3,1.75],[1.75,2.3],[1.95,3.1]], 110), curva([[-.55,1.75],[-.5,2.2],[-.2,2.75],[.4,3.1]], 90)]),
-  unir([curva([[.65,1.45],[.3,2.1],[-.2,2.5]], 50), curva([[1,1.7],[.6,2.4],[.05,2.85]], 50),                   // brazo: del hombro al codo...
-        curva([[-.2,2.5],[-.55,1.6],[-.8,.75]], 56), curva([[.05,2.85],[-.3,1.9],[-.55,.95]], 56)]),            // ...y del codo a la cara
-  relleno(-.66, .25, .27, .4, 70),
-  unir([[-.84,-.1],[-.7,-.2],[-.54,-.22],[-.4,-.15],[-.3,-.02]].map((b, k) => dedo(b, tipsLejos[k], .09, 26)))
+const LINEAS = [
+  [[72,192],[78,150],[92,112],[118,82],[150,66],[190,62],[224,72],[248,96]],                     // la cabeza calva
+  [[66,170],[74,182],[88,190]], [[78,160],[92,176]], [[95,215],[100,232],[106,246]],              // mechones y frente
+  [[108,268],[118,248],[145,240],[175,248],[188,272],[176,296],[148,302],[120,292],[108,270]],    // puño izquierdo
+  [[185,262],[205,242],[240,235],[262,252],[262,282],[240,300],[208,302],[190,285],[185,262]],    // puño derecho
+  [[238,170],[252,182],[262,205],[256,232]], [[248,98],[262,135],[270,172]],                      // oreja y nuca
+  [[262,110],[320,104],[400,108],[480,112],[540,120],[576,130]], [[440,112],[500,150],[566,190]], // la espalda y el respaldo
+  [[576,130],[574,240],[572,360],[566,470],[560,520]],
+  [[318,148],[356,215],[392,300],[414,390],[410,455],[392,470]],                                  // brazo
+  [[266,300],[300,332],[342,388],[372,433],[392,468]], [[236,306],[252,340],[290,398],[332,450],[362,470]], [[246,314],[280,328]],
+  [[285,318],[330,372],[375,430]], [[300,330],[345,385],[385,440]], [[318,342],[358,395],[392,450]],  // las rayas de la manga
+  [[138,305],[162,372],[172,402],[124,438],[98,488],[99,560],[107,650],[116,742],[112,788]],      // pierna cercana
+  [[125,445],[210,432],[300,455],[360,468]], [[300,478],[288,540],[283,620],[276,700],[274,762]],
+  [[112,788],[92,826],[100,849],[152,851],[216,820],[268,788],[274,760]], [[100,826],[150,806],[200,790],[262,770]],  // bota
+  [[330,470],[400,515],[480,500],[560,440]], [[285,590],[350,602],[420,588],[480,612],[560,560]],  // pierna lejana
+  [[300,640],[308,720],[325,790],[340,836]], [[420,592],[426,690],[420,782]],
+  [[226,916],[246,890],[312,862],[382,846],[422,784],[418,882],[384,922],[316,942],[246,946],[226,930],[226,916]], // la otra bota
+  [[553,112],[556,300],[560,440],[556,700],[561,832]], [[455,545],[461,700],[459,832]],           // la silla
+  [[420,576],[520,592],[556,592]], [[432,640],[540,612]], [[500,540],[540,600],[560,700]]
 ];
+const FIG = (() => {
+  const o = [];
+  for (const L of LINEAS) trazo(L, 3, o);
+  const n = o.length / 2;
+  for (let i = n - 1; i > 0; i--){ const j = Math.floor(hh(i * 7.31) * (i + 1)); const a = o[2 * i], b = o[2 * i + 1]; o[2 * i] = o[2 * j]; o[2 * i + 1] = o[2 * j + 1]; o[2 * j] = a; o[2 * j + 1] = b; }
+  return new Float32Array(o);
+})();
+const NVG = FIG.length / 2, VG_ASP = 580 / 952;
 function objetivo(i){
   const f = (i + .5) / N, a = ua[i], u = ub[i], tau = 6.2832;
   let x = 0, y = 0;
@@ -896,22 +898,21 @@ function objetivo(i){
       }
       break; }
     case 'insercion': {
-      // una persona sin rostro, encorvada, con una mano sobre la cara y la otra clavada en el cráneo; llora y se encoge
-      const R = geo.R, cx = geo.cx + Math.sin(t * .0004) * R * .03, cy = geo.cy, oi = ONTO.oido;
-      if (f < .62){
-        const k = f < .16 ? 0 : f < .20 ? 1 : f < .36 ? 2 : f < .50 ? 3 : f < .55 ? 4 : 5, P = PERFIL[k];
-        const j = (a * (P.length / 2 - 1)) | 0;
-        const sob = Math.pow(Math.max(0, Math.sin(t * .0062)), 3);                  // sollozo: los hombros suben, la cabeza y las manos caen
-        const dd = (k === 0 || k >= 3) ? sob * .05 : -sob * .05, tm = k >= 4 ? .02 : .01;
-        x = cx + P[2 * j] * R + Math.sin(t * .0017 + i * 1.3) * R * tm + (hh(i * 1.7) - .5) * R * .045 - oi * R * .05;
-        y = cy + (P[2 * j + 1] + dd) * R + Math.cos(t * .0023 + i * .9) * R * tm + (hh(i * 2.9) - .5) * R * .045 + (k === 2 || k === 3 ? Math.sin(t * .011) * R * .012 : 0);
+      // el dibujo de Van Gogh hecho de aves, borroso; llora (sollozos) y se encoge con el sonido
+      const fw = geo.fw, fh = geo.fh, cx = geo.cx + Math.sin(t * .0004) * fw * .008, cy = geo.cy, oi = ONTO.oido;
+      const X = q => cx + (q - .5) * fw, Y = q => cy + (q - .5) * fh;
+      if (f < .66){
+        const j = (i % NVG) * 2, uu = FIG[j], vv = FIG[j + 1];
+        const sob = Math.pow(Math.max(0, Math.sin(t * .0062)), 3);                  // sollozo: la cabeza y las manos caen, el cuerpo sube
+        x = X(uu) + Math.sin(t * .0017 + i * 1.3) * fh * .004 + (hh(i * 1.7) - .5) * fh * .007 - oi * fw * .012;
+        y = Y(vv) + sob * fh * (vv < .4 ? .012 : -.004) + Math.cos(t * .0023 + i * .9) * fh * .004 + (hh(i * 2.9) - .5) * fh * .007;
       } else if (f < .74){                                                                                            // la mente propia: una nube que gira dentro de la cabeza
-        const r = R * .6 * Math.sqrt(u), q = a * tau + t * .0006 * (1.3 - r / (R * .6));
-        x = cx + R * .03 + Math.cos(q) * r * .82; y = cy + Math.sin(q) * r;
-      } else {                                                                                                        // el pensamiento ajeno cae desde arriba a la derecha sobre la coronilla
-        const p = (u + a + t * .00018) % 1, tx = cx + R * .25, ty = cy - R * 1.02, sx = W + 30, sy = cy - H * .34 + (a - .5) * R * 1.2;
-        if (p < .72){ const k = p / .72; x = lp(sx, tx, k); y = lp(sy, ty, k) + Math.sin(k * 14 + a * 30) * R * .05 * (1 - k); }
-        else { const k = (p - .72) / .28; x = lp(tx, cx + R * .03 + (hh(i) - .5) * R * .4, k); y = lp(ty, cy + (hh(i + 3) - .5) * R * .4, k); }
+        const r = fw * .07 * Math.sqrt(u), q = a * tau + t * .0006 * (1.3 - r / (fw * .07));
+        x = X(.26) + Math.cos(q) * r * .9; y = Y(.17) + Math.sin(q) * r;
+      } else {                                                                                                        // el pensamiento ajeno cae sobre la coronilla
+        const p = (u + a + t * .00018) % 1, tx = X(.29), ty = Y(.07), sx = W + 30, sy = cy - fh * .8 + (a - .5) * fh * .1;
+        if (p < .72){ const k = p / .72; x = lp(sx, tx, k); y = lp(sy, ty, k) + Math.sin(k * 14 + a * 30) * fh * .02 * (1 - k); }
+        else { const k = (p - .72) / .28; x = lp(tx, X(.26) + (hh(i) - .5) * fw * .18, k); y = lp(ty, Y(.17) + (hh(i + 3) - .5) * fw * .18, k); }
       }
       break; }
     case 'sombra': {
