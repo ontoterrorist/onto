@@ -412,8 +412,8 @@ window.ONTO = { d: 0, ink: '236,235,230', quieto: 0, rojo: 0, apagon: 0, oido: 0
 </main>
 
 <footer class="cierre" data-formacion="ojo" data-nombre="el ojo">
-  <p class="sentencia" data-rev>El terror ontológico no es miedo a algo.</p>
-  <p class="sentencia" data-rev style="--i:1">Es descubrir que no hay nadie que tenga miedo.</p>
+  <p class="sentencia" data-rev>Creías que estabas leyendo esto.</p>
+  <p class="sentencia" data-rev style="--i:1">Hace rato que esto te lee a ti.</p>
   <div class="pie">
     <nav aria-label="Pie">
       <a href="https://github.com/ontoterrorist">GitHub</a>
@@ -729,8 +729,8 @@ function prepararObjetivo(){
     let s = 0; for (let k = 0; k < RINGS; k++) s += Math.pow(.74, k);
     let c = 0; for (let k = 0; k < RINGS; k++){ c += Math.pow(.74, k) / s; geo.cum[k] = c; geo.om[k] = (k % 2 ? 1 : -1) * .00032 * (1 + k * .55); }
   } else if (dom === 'insercion'){
-    if (hueco){ geo.R = Math.min(W * .2, hueco.height * .31); geo.cx = W * .5; geo.cy = hueco.top + hueco.height / 2 - geo.R * .45; }
-    else { geo.cx = W * .25; geo.cy = H * .4; geo.R = Math.min(W * .13, H * .24); }
+    if (hueco){ geo.R = Math.min(W * .15, hueco.height * .24); geo.cx = W * .5; geo.cy = hueco.top + hueco.height / 2 - geo.R; }
+    else { geo.R = Math.min(W * .13, H * .2); geo.cx = W * .24; geo.cy = H * .5 - geo.R; }
   } else if (dom === 'ojo'){
     const ahora = performance.now();
     geo.cx = W * (ph ? .5 : .58); geo.cy = H * (ph ? .27 : .46);
@@ -788,13 +788,28 @@ function curva(P, n){
   return out;
 }
 const circ = (cx, cy, rx, ry, n) => { const o = new Float32Array(n * 2); for (let k = 0; k < n; k++){ const q = k / n * 6.2832; o[2 * k] = cx + Math.cos(q) * rx; o[2 * k + 1] = cy + Math.sin(q) * ry; } return o; };
-const PF_FRENTE = [[.10,-1],[-.25,-.97],[-.55,-.83],[-.75,-.6],[-.83,-.35],[-.86,-.22],[-.8,-.14],[-.84,-.05],[-.9,.05],[-1.04,.14],[-.97,.2],[-.86,.22],[-.88,.29],[-.82,.34],[-.88,.41],[-.82,.5],[-.84,.62],[-.78,.74],[-.55,.82],[-.3,.8],[-.28,.95],[-.3,1.4],[-.8,1.55],[-1.4,1.8],[-1.85,2.1]];
-const PF_NUCA = [[.10,-1],[.45,-.92],[.8,-.62],[.95,-.2],[.93,.22],[.78,.55],[.55,.78],[.42,.92],[.4,1.4],[.9,1.55],[1.5,1.8],[1.95,2.1]];
+// la figura: una persona de perfil, sin rasgos, encorvada, con una mano sobre la cara y la otra clavada en el cráneo
+const rot = (P, ph) => P.map(q => [q[0] * Math.cos(ph) - q[1] * Math.sin(ph), q[0] * Math.sin(ph) + q[1] * Math.cos(ph)]);
+const unir = L => { const n = L.reduce((t, c) => t + c.length, 0), o = new Float32Array(n); let k = 0; for (const c of L){ o.set(c, k); k += c.length; } return o; };
+const dedo = (b, tp, bul, n) => {   // un dedo en garra: sale de la palma y se curva hacia el cráneo
+  const dx = tp[0] - b[0], dy = tp[1] - b[1], l = Math.hypot(dx, dy) || 1;
+  return curva([b, [b[0] + dx * .55 - dy / l * bul, b[1] + dy * .55 + dx / l * bul], tp], n);
+};
+const relleno = (cx, cy, rx, ry, n) => { const o = new Float32Array(n * 2); for (let k = 0; k < n; k++){ const q = hh(k * 3.7) * 6.2832, r = Math.sqrt(hh(k * 5.3 + 1)); o[2 * k] = cx + Math.cos(q) * r * rx; o[2 * k + 1] = cy + Math.sin(q) * r * ry; } return o; };
+const HUEVO = [[0,-1],[-.5,-.9],[-.8,-.52],[-.87,0],[-.76,.52],[-.42,.88],[0,.98],[.5,.86],[.88,.46],[.97,0],[.84,-.55],[.46,-.92],[0,-1]];
+const INCL = -.3;                                   // la cabeza cae hacia delante
+const cabeza = rot(HUEVO, INCL);
+const sobre = (pts, k) => rot(pts, INCL).map(q => [q[0] * k, q[1] * k]);
+const tipsLejos = sobre([[-.87,-.2],[-.8,-.52],[-.5,-.9],[-.2,-.98],[.1,-1]], .97);     // frente y coronilla
+const tipsCerca = sobre([[0,-.99],[.46,-.9],[.84,-.55],[.95,-.1],[.86,.4]], .96);        // nuca
 const PERFIL = [
-  curva(PF_FRENTE, 300), curva(PF_NUCA, 230),
-  curva(PF_NUCA.slice(0, 8).map(q => [.1 + (q[0] - .1) * .88, -.05 + (q[1] + .05) * .88]), 140),   // el pelo: un segundo contorno por dentro
-  circ(.22, .08, .13, .22, 50), circ(-.6, -.12, .045, .03, 14),                                    // oreja y ojo
-  curva([[-.82,-.27],[-.66,-.31],[-.46,-.3]], 30), curva([[-.84,.36],[-.74,.375],[-.62,.37]], 26)  // ceja y boca
+  curva(cabeza, 240),
+  unir([curva([[-.2,.95],[-.32,1.3],[-.55,1.75]], 40), curva([[.6,.8],[.62,1.2],[.75,1.5]], 36)]),
+  unir([curva([[.75,1.5],[1.3,1.75],[1.75,2.3],[1.95,3.1]], 110), curva([[-.55,1.75],[-.5,2.2],[-.2,2.75],[.4,3.1]], 90)]),
+  unir([curva([[.65,1.45],[.3,2.1],[-.2,2.5]], 50), curva([[1,1.7],[.6,2.4],[.05,2.85]], 50),                   // brazo: del hombro al codo...
+        curva([[-.2,2.5],[-.55,1.6],[-.8,.75]], 56), curva([[.05,2.85],[-.3,1.9],[-.55,.95]], 56)]),            // ...y del codo a la cara
+  relleno(-.66, .25, .27, .4, 70),
+  unir([[-.84,-.1],[-.7,-.2],[-.54,-.22],[-.4,-.15],[-.3,-.02]].map((b, k) => dedo(b, tipsLejos[k], .09, 26)))
 ];
 function objetivo(i){
   const f = (i + .5) / N, a = ua[i], u = ub[i], tau = 6.2832;
@@ -881,21 +896,22 @@ function objetivo(i){
       }
       break; }
     case 'insercion': {
-      // una persona de perfil (mira a la izquierda), borrosa y temblorosa; el pensamiento ajeno le entra por la nuca
-      const R = geo.R, cx = geo.cx + Math.sin(t * .0004) * R * .03, cy = geo.cy;
-      if (f < .50){
-        const k = f < .20 ? 0 : f < .34 ? 1 : f < .40 ? 2 : f < .44 ? 3 : f < .46 ? 4 : f < .48 ? 5 : 6, P = PERFIL[k];
+      // una persona sin rostro, encorvada, con una mano sobre la cara y la otra clavada en el cráneo; llora y se encoge
+      const R = geo.R, cx = geo.cx + Math.sin(t * .0004) * R * .03, cy = geo.cy, oi = ONTO.oido;
+      if (f < .62){
+        const k = f < .16 ? 0 : f < .20 ? 1 : f < .36 ? 2 : f < .50 ? 3 : f < .55 ? 4 : 5, P = PERFIL[k];
         const j = (a * (P.length / 2 - 1)) | 0;
-        // el desenfoque: cada punto vibra alrededor de su sitio y el contorno se ensancha
-        x = cx + P[2 * j] * R + Math.sin(t * .0017 + i * 1.3) * R * .024 + (hh(i * 1.7) - .5) * R * .06;
-        y = cy + P[2 * j + 1] * R + Math.cos(t * .0023 + i * .9) * R * .024 + (hh(i * 2.9) - .5) * R * .06;
-      } else if (f < .70){                                                                                            // la mente propia: una nube que gira
-        const r = R * .52 * Math.sqrt(u), q = a * tau + t * .0006 * (1.3 - r / (R * .52));
-        x = cx + R * .2 + Math.cos(q) * r * .9; y = cy - R * .2 + Math.sin(q) * r;
-      } else {                                                                                                        // el pensamiento ajeno
-        const p = (u + a + t * .00018) % 1, tx = cx + R * .94, ty = cy - R * .02, sx = W + 30, sy = cy - H * .34 + (a - .5) * R * 1.2;
+        const sob = Math.pow(Math.max(0, Math.sin(t * .0062)), 3);                  // sollozo: los hombros suben, la cabeza y las manos caen
+        const dd = (k === 0 || k >= 3) ? sob * .05 : -sob * .05, tm = k >= 4 ? .02 : .01;
+        x = cx + P[2 * j] * R + Math.sin(t * .0017 + i * 1.3) * R * tm + (hh(i * 1.7) - .5) * R * .045 - oi * R * .05;
+        y = cy + (P[2 * j + 1] + dd) * R + Math.cos(t * .0023 + i * .9) * R * tm + (hh(i * 2.9) - .5) * R * .045 + (k === 2 || k === 3 ? Math.sin(t * .011) * R * .012 : 0);
+      } else if (f < .74){                                                                                            // la mente propia: una nube que gira dentro de la cabeza
+        const r = R * .6 * Math.sqrt(u), q = a * tau + t * .0006 * (1.3 - r / (R * .6));
+        x = cx + R * .03 + Math.cos(q) * r * .82; y = cy + Math.sin(q) * r;
+      } else {                                                                                                        // el pensamiento ajeno cae desde arriba a la derecha sobre la coronilla
+        const p = (u + a + t * .00018) % 1, tx = cx + R * .25, ty = cy - R * 1.02, sx = W + 30, sy = cy - H * .34 + (a - .5) * R * 1.2;
         if (p < .72){ const k = p / .72; x = lp(sx, tx, k); y = lp(sy, ty, k) + Math.sin(k * 14 + a * 30) * R * .05 * (1 - k); }
-        else { const k = (p - .72) / .28; x = lp(tx, cx + R * .2 + (hh(i) - .5) * R * .4, k); y = lp(ty, cy - R * .2 + (hh(i + 3) - .5) * R * .4, k); }
+        else { const k = (p - .72) / .28; x = lp(tx, cx + R * .03 + (hh(i) - .5) * R * .4, k); y = lp(ty, cy + (hh(i + 3) - .5) * R * .4, k); }
       }
       break; }
     case 'sombra': {
@@ -1145,7 +1161,7 @@ function dibujar(estela){
       if (x < -10 || x > W + 10 || y < -10 || y > H + 10) continue;
       const s = sz[i] * esc;
       const posada = Math.hypot(vx[i], vy[i]) < .45 && Qv < .3;
-      const dif = borrosa && i < N * .7;   // la persona de perfil se dibuja borrosa
+      const dif = borrosa && i < N * .74;   // la persona de perfil se dibuja borrosa
       if (pase === 4){
         if (!dif) continue;
         const an = ph[i] * 7; ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(an) * 3, y + Math.sin(an) * 3);
