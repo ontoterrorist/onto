@@ -192,6 +192,17 @@ h2[data-t]::after{color:#00d5ff;translate:3px 0;clip-path:inset(0 0 100% 0);anim
 .js .fin .linea[data-rev],.fin .linea{position:relative;z-index:9}
 .fin .linea{font:400 var(--lead)/1.25 var(--f);letter-spacing:-.012em;max-width:30ch;color:#f6e9e5;text-shadow:0 0 22px rgba(255,40,30,.45)}
 .fin .linea b{font-weight:760;font-variation-settings:'wdth' 112;color:#ff5545}
+/* el expediente: lo que el navegador del visitante ya le contó a la página */
+.exp{position:relative;min-height:100svh;padding-top:var(--gap);align-content:center}
+.exp .col{grid-column:1/span 5;display:flex;flex-direction:column;gap:22px;position:relative;z-index:9}
+.exp-t{font:700 clamp(1rem,.9rem + .5vw,1.25rem)/1 var(--f);font-variation-settings:'wdth' 112;letter-spacing:.08em;text-transform:uppercase;color:#ff5545}
+.datos{display:flex;flex-direction:column;gap:14px}
+.datos li{font:400 clamp(1.0625rem,1rem + .45vw,1.35rem)/1.3 var(--f);color:#f6e9e5;max-width:42ch;text-shadow:0 0 3px #000,0 0 12px #000,0 0 22px rgba(255,40,30,.35)}
+.datos li:empty{display:none}
+.datos li::before{content:'\203A';color:#ff5545;margin-right:.6em}
+.datos li.escribe::after{content:'\258D';margin-left:2px;color:#ff5545;animation:cursor .9s steps(1) infinite}
+@keyframes cursor{50%{opacity:0}}
+.exp-nota{font-size:var(--small);color:#b3a29e;max-width:40ch;text-shadow:0 0 3px #000,0 0 10px #000}
 .sentencia{position:relative;z-index:9;font:700 clamp(1.5rem,1rem + 2.3vw,3.1rem)/1.04 var(--f);font-variation-settings:'wdth' 112;letter-spacing:-.03em;padding:0 var(--m);max-width:22ch;margin-bottom:12px;color:#fff0ec;text-shadow:0 0 26px rgba(255,40,30,.5)}
 .sentencia + .sentencia{margin-bottom:clamp(40px,8vh,90px)}
 .cierre .pie{position:relative;z-index:9}
@@ -199,7 +210,8 @@ h2[data-t]::after{color:#00d5ff;translate:3px 0;clip-path:inset(0 0 100% 0);anim
 .hondo .escena{display:none}
 @media (max-width:700px){
   .hondo .col,.hondo.der .col,.fin .col{grid-column:1/-1}
-  .fin{align-content:end;padding-bottom:10vh}
+  .fin,.exp{align-content:end;padding-bottom:10vh}
+  .exp .col{grid-column:1/-1}
   .susurro{white-space:normal;max-width:60vw}
   /* el texto se lee sobre las aves: un halo oscuro lo despega */
   .hondo .col *,.fin .linea{text-shadow:0 0 3px #000,0 0 10px #000,0 0 18px rgba(0,0,0,.8),calc(var(--ab) * -1.7px) 0 rgba(255,30,50,calc(var(--ab) * .5)),calc(var(--ab) * 1.7px) 0 rgba(0,210,255,calc(var(--ab) * .24))}
@@ -210,7 +222,7 @@ h2[data-t]::after{color:#00d5ff;translate:3px 0;clip-path:inset(0 0 100% 0);anim
   .mandos{bottom:8px;right:8px;gap:14px;padding:0 10px;background:rgba(0,0,0,.7);border-radius:2px}
 }
 @media (prefers-reduced-motion:reduce){
-  h2[data-t],h2[data-t]::before,h2[data-t]::after,.hondo .lead{animation:none}
+  h2[data-t],h2[data-t]::before,h2[data-t]::after,.hondo .lead,.datos li.escribe::after{animation:none}
   .susurro{transition:none}
 }
 </style>
@@ -384,6 +396,14 @@ window.ONTO = { d: 0, ink: '236,235,230', quieto: 0, rojo: 0, apagon: 0, activa:
     </div>
     <span class="susurro" aria-hidden="true" data-u=".9" style="right:10%;top:22%;--r:-3deg">mira atrás</span>
     <span class="susurro" aria-hidden="true" data-u=".92" style="left:8%;top:84%;--r:2deg">no cierres la pestaña</span>
+  </section>
+
+  <section class="exp g" id="expediente" data-formacion="ojo" data-nombre="el expediente" aria-label="Lo que sabe de ti">
+    <div class="col">
+      <p class="exp-t" data-rev>Lo que ya sé de ti</p>
+      <ul class="datos" id="datos"></ul>
+      <p class="exp-nota" data-rev>Todo esto lo leyó tu propio navegador. No sale de esta pantalla.</p>
+    </div>
   </section>
 
 </main>
@@ -700,14 +720,36 @@ function prepararObjetivo(){
     let s = 0; for (let k = 0; k < RINGS; k++) s += Math.pow(.74, k);
     let c = 0; for (let k = 0; k < RINGS; k++){ c += Math.pow(.74, k) / s; geo.cum[k] = c; geo.om[k] = (k % 2 ? 1 : -1) * .00032 * (1 + k * .55); }
   } else if (dom === 'ojo'){
-    geo.cx = W * .5; geo.cy = H * (ph ? .27 : .46);
-    geo.a = Math.min(W * (ph ? .44 : .38), 520); geo.b = geo.a * .38; geo.R = geo.b * .8;
-    const ciclo = (t % 7200) / 7200, par = ciclo > .93 ? Math.sin((ciclo - .93) / .07 * Math.PI) : 0;
-    geo.abre = 1 - .93 * par;
-    geo.ix = geo.cx + Math.max(-geo.a * .3, Math.min(geo.a * .3, (m.x - geo.cx) * .24));
-    geo.iy = geo.cy + Math.max(-geo.b * .4, Math.min(geo.b * .4, (m.y - geo.cy) * .28)) * geo.abre;
+    const ahora = performance.now();
+    geo.cx = W * (ph ? .5 : .58); geo.cy = H * (ph ? .27 : .46);
+    geo.a = Math.min(W * (ph ? .44 : .31), 560); geo.b = geo.a * .36; geo.R = geo.b * .86;
+    // la mirada: el ojo nace centrado, de frente al usuario. Si mueves el cursor te sigue;
+    // si te quedas quieto te fija, con micro-sacadas, de reojo de vez en cuando, y se dilata.
+    const sigue = m.fino && ahora - m.t < 1600;
+    if (sigue){
+      gz.tx = cl((m.tx - geo.cx) / (geo.a * 1.1), -1, 1); gz.ty = cl((m.ty - geo.cy) / (geo.b * 2.4), -1, 1); gz.prox = ahora + 1200;
+    } else if (ahora > gz.prox){
+      if (Math.random() < .14){ gz.tx = (Math.random() < .5 ? -1 : 1) * (.55 + Math.random() * .45); gz.ty = (Math.random() - .5) * .9; gz.prox = ahora + 600 + Math.random() * 500; }
+      else { gz.tx = (Math.random() - .5) * .08; gz.ty = (Math.random() - .5) * .06; gz.prox = ahora + 300 + Math.random() * 800; }
+    }
+    gz.x += (gz.tx - gz.x) * (sigue ? .16 : .3); gz.y += (gz.ty - gz.y) * (sigue ? .16 : .3);
+    gz.dil += ((sigue ? 0 : 1) - gz.dil) * (sigue ? .05 : .004);
+    if (ahora > gz.sigParp){ gz.parp0 = ahora; gz.sigParp = ahora + (Math.random() < .22 ? 480 : 2800 + Math.random() * 4800); }
+    const kb = (ahora - gz.parp0) / 240, par = kb >= 0 && kb < 1 ? Math.sin(kb * Math.PI) : 0;
+    const llegada = Math.min(1, F.ojo * 1.3);
+    geo.abre = (1 - .94 * par) * (.15 + .85 * llegada * llegada);   // el párpado se abre al llegar
+    geo.cx += gz.x * geo.a * .025;
+    geo.bu = geo.b * geo.abre * (1 - .14 * gz.y); geo.bl = geo.b * (.85 + .15 * geo.abre); geo.tilt = geo.b * .08;
+    geo.rx = geo.R * (.12 + .09 * gz.dil); geo.ry = geo.R * (.64 + .1 * gz.dil);   // pupila en rendija
+    geo.ix = geo.cx + gz.x * geo.a * .34; geo.iy = geo.cy + gz.y * geo.b * .34;
   }
 }
+// el ojo del final: párpados, pliegue, pestañas, iris con radios, pupila en rendija y venas
+const gz = { x: 0, y: 0, tx: 0, ty: 0, prox: 0, dil: 0, sigParp: 0, parp0: -1e9 };
+const cl = (x, a, b) => x < a ? a : x > b ? b : x;
+const hh = k => { const v = Math.sin(k * 12.9898) * 43758.5453; return v - Math.floor(v); };
+const lidU = s => geo.cy - geo.bu * (1 - s * s) * (1 - .16 * s) + s * geo.tilt;
+const lidL = s => geo.cy + geo.bl * .8 * Math.pow(Math.max(0, 1 - s * s), 1.1) + s * geo.tilt;
 function objetivo(i){
   const f = (i + .5) / N, a = ua[i], u = ub[i], tau = 6.2832;
   let x = 0, y = 0;
@@ -732,17 +774,38 @@ function objetivo(i){
       else { const q = t * .002 + i; x = W * .5 + Math.cos(q) * W * .3; y = rects.frase[1] - 80 + Math.sin(q * 1.3) * 40; }
       break; }
     case 'ojo': {
-      const A = geo.a, B = geo.b * geo.abre, cx = geo.cx, cy = geo.cy;
-      if (f < .30){ const s = a * 2 - 1; x = cx + s * A; y = cy + (u < .5 ? -1 : 1) * B * (1 - s * s); }
-      else if (f < .80){
-        const r = geo.R * (.5 + .5 * Math.sqrt(u)), ang = a * tau;
-        x = geo.ix + Math.cos(ang) * r; y = geo.iy + Math.sin(ang) * r;
-        const s = (x - cx) / A, lid = B * (1 - s * s) * .96;
-        if (Math.abs(y - cy) > lid) y = cy + Math.sign(y - cy) * lid;
-      } else {
-        const side = a < .5 ? -1 : 1;
-        x = lp(cx + side * A * .94, geo.ix + side * geo.R * .95, u);
-        y = lp(cy, geo.iy, u) + Math.sin(u * 9 + a * 40) * B * .1 * (1 - u);
+      const A = geo.a, B = geo.b, cx = geo.cx, cy = geo.cy, R = geo.R;
+      if (f < .13){ const s = a * 2 - 1; x = cx + s * A; y = lidU(s) + (u - .5) * 2.2; }                 // párpado superior
+      else if (f < .20){ const s = a * 2 - 1; x = cx + s * A; y = lidL(s) + (u - .5) * 2.2; }           // párpado inferior
+      else if (f < .27){                                                                                // pliegue
+        const s = (a * 2 - 1) * .86; x = cx + s * A;
+        y = cy - geo.bu * 1.5 * (1 - s * s) * (1 - .2 * s) - B * .16 * geo.abre + s * geo.tilt;
+      } else if (f < .36){                                                                              // pestañas
+        const k = Math.floor(a * 30), s = k / 29 * 1.8 - .9, h1 = hh(k), h2 = hh(k + 77);
+        const ang = -1.5708 + s * .8 + (h1 - .5) * .35;
+        const len = B * (.5 - .2 * Math.abs(s)) * (.75 + .5 * h2) * (.25 + .75 * Math.min(1, geo.abre * 1.4)), q = .1 + .9 * u;
+        x = cx + s * A + Math.cos(ang) * len * q; y = lidU(s) + Math.sin(ang) * len * q;
+      } else if (f < .41){                                                                              // ojeras
+        const s = (a * 2 - 1) * .8; x = cx + s * A * .92;
+        y = cy + geo.bl * .78 * (1 - s * s) + B * .5 + (u - .5) * 3 + s * geo.tilt;
+      } else if (f < .44){                                                                              // lagrimal
+        const r = Math.sqrt(u) * A * .06, ang = a * tau; x = cx - A * .9 + Math.cos(ang) * r * 1.3; y = cy - geo.tilt * .9 + Math.sin(ang) * r;
+      } else if (f < .72){                                                                              // iris con radios
+        const k = Math.floor(a * 56), ang = (k + .5 + (hh(i) - .5) * .5) / 56 * tau, ca = Math.cos(ang), sa = Math.sin(ang);
+        const rin = geo.rx * geo.ry / Math.sqrt((geo.ry * ca) * (geo.ry * ca) + (geo.rx * sa) * (geo.rx * sa));
+        const r = rin + (R - rin) * Math.pow(u, .7);
+        x = geo.ix + ca * r; y = geo.iy + sa * r;
+      } else if (f < .78){ const r = R * (.92 + .08 * u), ang = a * tau; x = geo.ix + Math.cos(ang) * r; y = geo.iy + Math.sin(ang) * r; }   // anillo del iris
+      else if (f < .80){ const r = Math.sqrt(u) * R * .1, ang = a * tau; x = geo.ix - R * .34 + Math.cos(ang) * r; y = geo.iy - R * .38 + Math.sin(ang) * r; }  // brillo
+      else {                                                                                            // venas
+        const k = Math.floor(a * 16), h1 = hh(k + 5), h2 = hh(k + 41), h3 = hh(k + 9), side = (k & 1) ? 1 : -1;
+        const x0 = cx + side * A * (.97 - .3 * h1), y0 = cy + (h2 - .5) * B * .9 + side * geo.tilt;
+        const x1 = geo.ix + side * R * (1.04 + .06 * h3), y1 = geo.iy + (h1 - .5) * R * 1.1;
+        x = lp(x0, x1, u); y = lp(y0, y1, u) + Math.sin(u * 11 + k * 2.3) * B * .08 * (1 - u) + (hh(i + 9) - .5) * 1.5;
+      }
+      if (f >= .41){   // todo lo del globo ocular queda dentro de los párpados
+        const s = cl((x - cx) / A, -1, 1), yu = lidU(s) + 1.5, yl = lidL(s) - 1.5;
+        if (y < yu) y = yu; else if (y > yl) y = yl;
       }
       break; }
     case 'sombra': {
@@ -990,9 +1053,9 @@ function dibujar(estela){
       if (x < -10 || x > W + 10 || y < -10 || y > H + 10) continue;
       const s = sz[i] * esc;
       const posada = Math.hypot(vx[i], vy[i]) < .45 && Qv < .3;
-      const sangre = rojo > .02 && lane[i] > .93;
-      if (pase === 2){
-        if (posada){
+      const sangre = rojo > .02 && (lane[i] > .93 || (F.ojo > .4 && i >= N * .8));   // en el ojo, las venas son rojas
+      if (pase === 2 || (pase === 3 && posada)){
+        if (pase === 3 ? sangre : (posada && !sangre)){
           const a = 1.6 + s * 1.4;
           if (apuntan){ const an = Math.atan2(mira.y - y, mira.x - x); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(an) * a * 1.8, y + Math.sin(an) * a * 1.8); }
           else if (tel && (F.nombre > .5 || F.frase > .5)){ const an = ph[i] * 7; ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(an) * a * 1.3, y + Math.sin(an) * a * 1.3); }
@@ -1000,7 +1063,7 @@ function dibujar(estela){
         }
         continue;
       }
-      if (pase === 3){ if (posada || !sangre) continue; }
+      if (pase === 3){ if (!sangre) continue; }
       else if (posada || sangre || (pase === 0) !== (sz[i] < .95)) continue;
       const c = Math.cos(hd[i]), si = Math.sin(hd[i]);
       const aleteo = Math.sin(ph[i] + t * (.011 + .006 * s));
@@ -1011,7 +1074,7 @@ function dibujar(estela){
       ctx.lineTo(hx, hy);
       ctx.lineTo(bx + si * env, by - c * env);
     }
-    ctx.strokeStyle = pase === 0 ? `rgba(${INK},.48)` : pase === 1 ? `rgba(${INK},.92)` : pase === 3 ? `rgba(200,24,34,${(.5 + .45 * rojo).toFixed(2)})` : (apuntan && tel ? `rgba(${INK},.5)` : `rgb(${INK})`);
+    ctx.strokeStyle = pase === 0 ? `rgba(${INK},.48)` : pase === 1 ? `rgba(${INK},.92)` : pase === 3 ? `rgba(215,26,38,${(.55 + .45 * rojo).toFixed(2)})` : (apuntan && tel ? `rgba(${INK},.5)` : `rgb(${INK})`);
     ctx.lineWidth = pase === 0 ? 1 : pase === 1 ? 1.35 : pase === 3 ? 1.5 : 1.7;
     ctx.stroke();
   }
@@ -1300,7 +1363,7 @@ function ojos(tms, dtMs){
   if (pares.length < cupo() && tms > proxPar){ nuevoPar(false); proxPar = tms + 500 + Math.random() * 1800; }
   for (let i = pares.length - 1; i >= 0; i--){
     const p = pares[i], edad = tms - p.nace, dist = Math.hypot(p.x - m.x, p.y - m.y) + .01;
-    if (dist < luzR * .8 && !p.muere) p.muere = tms;
+    if (dist < luzR * .8 && !p.muere){ p.muere = tms; ojosAlumbrados++; }
     let a = Math.min(1, edad / 900);
     const resta = p.vida - edad;
     if (resta < 700) a *= Math.max(0, resta / 700);
@@ -1442,6 +1505,86 @@ function relojes(tms){
   tHora.textContent = String(h).padStart(2, '0') + ':' + String(f.getMinutes()).padStart(2, '0');
   tResto.textContent = (h >= 22 || h < 6) ? 'A esta hora no debería haber nadie despierto.' : 'Todavía hay luz. Eso no ayudará.';
 }
+
+/* ---------- el expediente: lo que el navegador ya le contó a la página ----------
+   Todo se lee en el navegador del visitante y solo se muestra a él: no se envía a ningún lado. */
+let atras = 0, ojosAlumbrados = 0, yAnt = 0, maxY = 0, subiendo = false;
+addEventListener('scroll', () => {
+  const y = scrollY;
+  if (y > maxY) maxY = y;
+  if (y < yAnt - 3 && !subiendo && maxY - y > 300){ atras++; subiendo = true; }
+  else if (y > yAnt + 3) subiendo = false;
+  yAnt = y;
+}, { passive: true });
+
+// cuántas veces ha vuelto: solo en su propio navegador
+let visitas = { n: 1, primera: Date.now() };
+try {
+  const g = JSON.parse(localStorage.getItem('onto-visitas') || 'null');
+  if (g && g.n > 0 && g.primera) visitas = { n: g.n + 1, primera: g.primera };
+  localStorage.setItem('onto-visitas', JSON.stringify(visitas));
+} catch (e) {}
+const ORD = ['', 'primera', 'segunda', 'tercera', 'cuarta', 'quinta', 'sexta', 'séptima', 'octava', 'novena', 'décima'];
+function hace(ms){
+  const h = ms / 36e5;
+  if (h < 1) return 'unos minutos';
+  if (h < 24) return Math.round(h) + (Math.round(h) === 1 ? ' hora' : ' horas');
+  const d = Math.round(h / 24);
+  return d + (d === 1 ? ' día' : ' días');
+}
+function bateria(){
+  if (!navigator.getBattery) return Promise.resolve(null);
+  return Promise.race([navigator.getBattery(), new Promise(r => setTimeout(() => r(null), 700))]).catch(() => null);
+}
+async function datos(){
+  const L = [], ua = navigator.userAgent;
+  L.push(visitas.n === 1 ? 'Es la primera vez que vienes. No será la última.'
+    : `Es la ${visitas.n <= 10 ? ORD[visitas.n] : visitas.n + '.ª'} vez que vienes. La primera fue hace ${hace(Date.now() - visitas.primera)}.`);
+  let zona = '';
+  try { zona = Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace(/_/g, ' '); } catch (e) {}
+  if (zona) L.push(`Estás en ${zona}. Tu reloj te delata.`);
+  const so = /Windows/.test(ua) ? 'Windows' : /Android/.test(ua) ? 'Android' : /iPhone|iPad|iPod/.test(ua) ? 'iOS' : /Mac OS X|Macintosh/.test(ua) ? 'macOS' : /CrOS/.test(ua) ? 'ChromeOS' : /Linux/.test(ua) ? 'Linux' : '';
+  const nav = /Firefox\//.test(ua) ? 'Firefox' : /Edg\//.test(ua) ? 'Edge' : /OPR\/|Opera/.test(ua) ? 'Opera' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'un navegador';
+  L.push(`Me hablas desde ${nav}${so ? ', en ' + so : ''}. ${matchMedia('(pointer:coarse)').matches ? 'Con el dedo.' : 'Con un cursor.'}`);
+  if (screen.width) L.push(`Tu pantalla mide ${screen.width} por ${screen.height}. La veo entera.`);
+  try {
+    const nom = new Intl.DisplayNames([navigator.language], { type: 'language' }).of(navigator.language);
+    if (nom) L.push(`Piensas en ${nom.toLowerCase()}.`);
+  } catch (e) {}
+  if (navigator.hardwareConcurrency) L.push(`Tu máquina tiene ${navigator.hardwareConcurrency} núcleos. Ninguno te defiende.`);
+  const b = await bateria();
+  if (b) L.push(`Te queda el ${Math.round(b.level * 100)}% de batería. ${b.charging ? 'Estás enchufado: no te vas a ir.' : b.level < .3 ? 'Quizá no alcance para volver.' : 'Alcanza.'}`);
+  L.push(matchMedia('(prefers-color-scheme: dark)').matches ? 'Tu sistema prefiere la oscuridad. Qué coincidencia.' : 'Tu sistema prefiere la luz. Aquí no importa.');
+  let ref = '';
+  try { ref = document.referrer ? new URL(document.referrer).hostname : ''; } catch (e) {}
+  L.push(ref ? `Llegaste desde ${ref}.` : 'Escribiste la dirección tú mismo. Nadie te mandó.');
+  L.push(atras === 0 ? 'No subiste a releer ni una vez. Obediente.' : `Subiste ${atras} ${atras === 1 ? 'vez' : 'veces'} a releer. Lo vi.`);
+  L.push(ojosAlumbrados === 0 ? 'No alumbraste ningún par de ojos. Prefieres no mirar.' : `Alumbraste ${ojosAlumbrados} ${ojosAlumbrados === 1 ? 'par' : 'pares'} de ojos. Ninguno era el último.`);
+  if (!flags.luz) L.push('Apagaste la linterna. Quisiste dejar de ver.');
+  L.push(flags.sonido ? 'Tienes el sonido encendido. Me oyes respirar.' : 'Tienes el sonido apagado. Igual respiro.');
+  L.push('Con esto basta para reconocerte entre un millón.');
+  return L;
+}
+const ulD = $('datos'), secExp = $('expediente');
+let expMostrado = false;
+async function mostrarDatos(){
+  if (expMostrado || !ulD) return;
+  expMostrado = true;
+  const L = await datos(), lis = L.map(() => ulD.appendChild(document.createElement('li')));
+  let k = 0;
+  const sig = () => {
+    if (k >= L.length) return;
+    const li = lis[k], txt = L[k++];
+    if (reduce){ li.textContent = txt; sig(); return; }
+    li.classList.add('escribe'); let c = 0;
+    const iv = setInterval(() => {
+      li.textContent = txt.slice(0, ++c);
+      if (c >= txt.length){ clearInterval(iv); li.classList.remove('escribe'); setTimeout(sig, 700 + Math.random() * 600); }
+    }, 24);
+  };
+  sig();
+}
+if (secExp) new IntersectionObserver((es, o) => { if (es.some(e => e.isIntersecting)){ o.disconnect(); mostrarDatos(); } }, { threshold: .3 }).observe(secExp);
 
 /* ---------- el cuadro ---------- */
 let proxMut = 0;
