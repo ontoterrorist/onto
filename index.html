@@ -159,6 +159,8 @@ main,header,footer{z-index:auto}
 
 .mandos{position:fixed;right:var(--m);bottom:12px;z-index:12;display:flex;gap:18px}
 .mandos button{all:unset;box-sizing:border-box;font:500 .8125rem/1 var(--f);letter-spacing:.02em;color:var(--muted);cursor:pointer;padding:8px 0;border-bottom:1px solid transparent;opacity:.85}
+.mofa{position:fixed;right:var(--m);bottom:54px;z-index:12;max-width:min(360px,calc(100vw - 2 * var(--m)));text-align:right;font:italic 400 1.15rem/1.3 'IM Fell English',Georgia,serif;color:#e0322c;text-shadow:0 0 14px rgba(190,20,30,.6);opacity:0;transform:translateY(6px);transition:opacity .9s,transform .9s;pointer-events:none}
+.mofa.on{opacity:1;transform:none}
 .mandos button:hover,.mandos button:focus-visible{color:var(--ink);border-bottom-color:var(--accent)}
 .mandos button:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
 
@@ -230,7 +232,7 @@ h2[data-t]::after{color:#00d5ff;translate:3px 0;clip-path:inset(0 0 100% 0);anim
 <body>
 <script>document.documentElement.classList.add('js')</script>
 <script>
-window.ONTO = { d: 0, ink: '236,235,230', quieto: 0, rojo: 0, apagon: 0, activa: 'nombre', F: null, espantar: null, frame: null,
+window.ONTO = { d: 0, ink: '236,235,230', quieto: 0, rojo: 0, apagon: 0, oido: 0, sobresalto: 0, activa: 'nombre', F: null, espantar: null, frame: null,
   mira: { x: innerWidth * .6, y: innerHeight * .5, tx: innerWidth * .6, ty: innerHeight * .5, vx: 0, vy: 0, t: 0, fino: false } };
 (() => {
   const m = ONTO.mira;
@@ -244,7 +246,8 @@ window.ONTO = { d: 0, ink: '236,235,230', quieto: 0, rojo: 0, apagon: 0, activa:
 <div id="oscuridad" aria-hidden="true"></div>
 <canvas id="ojos" aria-hidden="true"></canvas>
 <canvas id="grano" width="256" height="256" aria-hidden="true"></canvas>
-<div class="mandos" role="group" aria-label="Ambiente"><button type="button" id="b-sonido" aria-pressed="false">sonido: no</button><button type="button" id="b-luz" aria-pressed="true">linterna: sí</button></div>
+<div class="mandos" role="group" aria-label="Ambiente"><button type="button" id="b-sonido" aria-pressed="true">sonido: sí</button><button type="button" id="b-luz" aria-pressed="true">linterna: sí</button></div>
+<div id="mofa" class="mofa" role="status" aria-live="polite"></div>
 
 <main id="arriba">
   <section class="intro" data-formacion="nombre" data-nombre="nombre" aria-labelledby="titulo">
@@ -340,18 +343,19 @@ window.ONTO = { d: 0, ink: '236,235,230', quieto: 0, rojo: 0, apagon: 0, activa:
     <span class="susurro" aria-hidden="true" data-u=".5" style="right:16%;top:72%;--r:1.5deg">el genio maligno dejó de mentir</span>
   </section>
 
-  <section class="hondo der g" id="cuarto" data-formacion="cuadricula" data-nombre="el cuarto" aria-labelledby="h-cua">
+  <section class="hondo der g" id="insercion" data-formacion="insercion" data-nombre="el pensamiento ajeno" aria-labelledby="h-ins">
     <div class="col">
-      <h2 id="h-cua" data-rev data-t="El cuarto">El cuarto</h2>
-      <p class="lead" data-rev style="--i:1">Un hombre está encerrado en una habitación. Por debajo de la puerta le pasan papeles con signos que no entiende.</p>
-      <p data-rev style="--i:2">Tiene un manual de reglas: si llega este signo, devuelve aquel otro. Afuera creen que la habitación entiende chino. Adentro nadie entiende nada; solo se obedece.</p>
-      <p data-rev style="--i:3">Searle lo imaginó como un argumento. No dijo cuánto tiempo lleva dentro. No dijo si todavía hay alguien afuera.</p>
+      <h2 id="h-ins" data-rev data-t="Pensamientos que no son tuyos">Pensamientos que no son tuyos</h2>
+      <p class="lead" data-rev style="--i:1">Hay personas que reconocen un pensamiento dentro de su propia cabeza y aun así aseguran que no lo pensaron ellas.</p>
+      <p data-rev style="--i:2">Se llama inserción de pensamiento, y es uno de los síntomas que describió Kurt Schneider. Quien lo vive no dice que piensa otro: dice que ocurre en él, pero que alguien lo puso ahí. Los filósofos separan dos cosas que casi siempre van juntas: que un pensamiento sea mío porque ocurre en mi mente, y que sea mío porque yo lo hice.</p>
+      <p data-rev style="--i:3">Piensa en tu último pensamiento. Lo sentiste tuyo. ¿Viste cómo llegó, o ya estaba ahí cuando miraste? Esta frase la estás pensando tú ahora. Eso es justo lo que nadie puede comprobar.</p>
     </div>
-    <span class="susurro" aria-hidden="true" data-u=".5" style="left:6%;top:26%;--r:-3deg">tu mano no es tuya</span>
-    <span class="susurro" aria-hidden="true" data-u=".54" style="left:12%;top:64%;--r:2deg">no entiendes lo que respondes</span>
+    <div class="escena" data-f="insercion" aria-hidden="true"></div>
+    <span class="susurro" aria-hidden="true" data-u=".5" style="left:8%;top:14%;--r:-2deg">ese pensamiento no lo pensaste tú</span>
+    <span class="susurro" aria-hidden="true" data-u=".54" style="left:30%;top:90%;--r:2deg">¿de quién es esta voz?</span>
   </section>
 
-  <section class="hondo g" id="rostro" data-formacion="rostro" data-nombre="el rostro" aria-labelledby="h-ros">
+  <section class="hondo g" id="rostro"data-formacion="rostro" data-nombre="el rostro" aria-labelledby="h-ros">
     <div class="col">
       <h2 id="h-ros" data-rev data-t="Cara conocida">Cara conocida</h2>
       <p class="lead" data-rev style="--i:1">Hay personas que reconocen perfectamente el rostro de su madre y juran que es una impostora.</p>
@@ -393,6 +397,7 @@ window.ONTO = { d: 0, ink: '236,235,230', quieto: 0, rojo: 0, apagon: 0, activa:
       <p class="linea" data-rev style="--i:2">Bajaste hasta el final. Casi nadie baja hasta el final.</p>
       <p class="linea" data-rev style="--i:3">Las aves nunca fueron aves.</p>
       <p class="linea" data-rev style="--i:4">Eran otra cosa que te miraba desde el principio.</p>
+      <p class="linea" id="l-sonido" data-rev style="--i:5" hidden>Apagaste el sonido. Como si lo que respira necesitara que lo oigas.</p>
     </div>
     <span class="susurro" aria-hidden="true" data-u=".9" style="right:10%;top:22%;--r:-3deg">mira atrás</span>
     <span class="susurro" aria-hidden="true" data-u=".92" style="left:8%;top:84%;--r:2deg">no cierres la pestaña</span>
@@ -483,12 +488,13 @@ const SETS = {
   abismo:     { sep: .1,  ali: 0,   coh: 0,   r: 14, vmax: 7,   vmin: 0 },
   frase:      { sep: .15, ali: .1,  coh: 0,   r: 14, vmax: 12,  vmin: 0 },
   ojo:        { sep: .1,  ali: 0,   coh: 0,   r: 14, vmax: 9,   vmin: 0 },
+  insercion:  { sep: .5,  ali: .2,  coh: 0,   r: 20, vmax: 6.5, vmin: 0 },
 };
 const KEYS = Object.keys(SETS);
 // sin ancla en la dirección se entra por el nombre: las aves salen ya rumbo a las letras
 const deEntrada = !location.hash;
 const F = { libre: deEntrada ? 0 : 1, molino: 0, reglas: 0, cable: 0, rio: 0, nombre: deEntrada ? 1 : 0,
-  sombra: 0, cuadricula: 0, rostro: 0, abismo: 0, frase: 0, ojo: 0 };
+  sombra: 0, cuadricula: 0, rostro: 0, abismo: 0, frase: 0, ojo: 0, insercion: 0 };
 ONTO.F = F;
 const P = Object.assign({}, deEntrada ? SETS.nombre : SETS.libre);
 let activa = deEntrada ? 'nombre' : 'libre';
@@ -685,7 +691,7 @@ function medir(){
 }
 
 /* ---------- formaciones del descenso: cada ave recibe un punto ---------- */
-const OBJ = ['cuadricula', 'rostro', 'abismo', 'frase', 'ojo', 'sombra'];
+const OBJ = ['cuadricula', 'rostro', 'abismo', 'frase', 'ojo', 'sombra', 'insercion'];
 const RINGS = 9;
 const geo = { dom: '', w: 0, cols: 1, cx: 0, cy: 0, R: 1, a: 1, b: 1, ix: 0, iy: 0, abre: 1, cum: new Float32Array(RINGS), om: new Float32Array(RINGS) };
 const TO = [0, 0];
@@ -709,7 +715,7 @@ function prepararObjetivo(){
   geo.dom = dom; geo.w = w;
   if (!dom) return;
   const m = ONTO.mira, ph = phone();
-  const hueco = ph && (dom === 'rostro' || dom === 'abismo') ? escena(dom) : null;
+  const hueco = ph && (dom === 'rostro' || dom === 'abismo' || dom === 'insercion') ? escena(dom) : null;
   if (dom === 'cuadricula') geo.cols = Math.ceil(Math.sqrt(N * W / H));
   else if (dom === 'rostro'){
     if (hueco){ geo.cx = W * .5; geo.cy = hueco.top + hueco.height / 2; geo.R = Math.min(W * .36, hueco.height * .46); }
@@ -719,10 +725,14 @@ function prepararObjetivo(){
     else { geo.cx = ph ? W * .5 : W * .66; geo.cy = H * .5; geo.R = Math.min(W, H) * (ph ? .42 : .46); }
     let s = 0; for (let k = 0; k < RINGS; k++) s += Math.pow(.74, k);
     let c = 0; for (let k = 0; k < RINGS; k++){ c += Math.pow(.74, k) / s; geo.cum[k] = c; geo.om[k] = (k % 2 ? 1 : -1) * .00032 * (1 + k * .55); }
+  } else if (dom === 'insercion'){
+    if (hueco){ geo.cx = W * .5; geo.cy = hueco.top + hueco.height / 2 - hueco.height * .06; geo.R = Math.min(W * .26, hueco.height * .3); }
+    else { geo.cx = W * .3; geo.cy = H * .46; geo.R = Math.min(W * .17, H * .27); }
   } else if (dom === 'ojo'){
     const ahora = performance.now();
     geo.cx = W * (ph ? .5 : .58); geo.cy = H * (ph ? .27 : .46);
-    geo.a = Math.min(W * (ph ? .44 : .31), 560); geo.b = geo.a * .36; geo.R = geo.b * .86;
+    const oi = ONTO.oido;   // el ojo oye: late, se dilata y tiembla con cada golpe de sonido
+    geo.a = Math.min(W * (ph ? .44 : .31), 560) * (1 + .03 * oi); geo.b = geo.a * .36; geo.R = geo.b * .86;
     // la mirada: el ojo nace centrado, de frente al usuario. Si mueves el cursor te sigue;
     // si te quedas quieto te fija, con micro-sacadas, de reojo de vez en cuando, y se dilata.
     const sigue = m.fino && ahora - m.t < 1600;
@@ -737,11 +747,12 @@ function prepararObjetivo(){
     if (ahora > gz.sigParp){ gz.parp0 = ahora; gz.sigParp = ahora + (Math.random() < .22 ? 480 : 2800 + Math.random() * 4800); }
     const kb = (ahora - gz.parp0) / 240, par = kb >= 0 && kb < 1 ? Math.sin(kb * Math.PI) : 0;
     const llegada = Math.min(1, F.ojo * 1.3);
-    geo.abre = (1 - .94 * par) * (.15 + .85 * llegada * llegada);   // el párpado se abre al llegar
+    geo.abre = Math.min(1.12, (1 - .94 * par) * (.15 + .85 * llegada * llegada) * (1 + .12 * oi));   // el párpado se abre al llegar (y más con el susto)
     geo.cx += gz.x * geo.a * .025;
     geo.bu = geo.b * geo.abre * (1 - .14 * gz.y); geo.bl = geo.b * (.85 + .15 * geo.abre); geo.tilt = geo.b * .08;
-    geo.rx = geo.R * (.12 + .09 * gz.dil); geo.ry = geo.R * (.64 + .1 * gz.dil);   // pupila en rendija
-    geo.ix = geo.cx + gz.x * geo.a * .34; geo.iy = geo.cy + gz.y * geo.b * .34;
+    geo.rx = geo.R * (.12 + .09 * gz.dil + .1 * oi); geo.ry = geo.R * (.64 + .1 * gz.dil + .08 * oi);   // pupila en rendija
+    geo.ix = geo.cx + gz.x * geo.a * .34 + (Math.random() - .5) * geo.R * .08 * oi;
+    geo.iy = geo.cy + gz.y * geo.b * .34 + (Math.random() - .5) * geo.R * .08 * oi;
   }
 }
 // el ojo del final: párpados, pliegue, pestañas, iris con radios, pupila en rendija y venas
@@ -806,6 +817,21 @@ function objetivo(i){
       if (f >= .41){   // todo lo del globo ocular queda dentro de los párpados
         const s = cl((x - cx) / A, -1, 1), yu = lidU(s) + 1.5, yl = lidL(s) - 1.5;
         if (y < yu) y = yu; else if (y > yl) y = yl;
+      }
+      break; }
+    case 'insercion': {
+      const R = geo.R, cx = geo.cx, cy = geo.cy, ang = a * tau;
+      if (f < .30){ const g = .32 + a * (tau - .64); x = cx + Math.cos(g) * R * .8; y = cy + Math.sin(g) * R; }          // cráneo, abierto en la sien
+      else if (f < .42){                                                                                             // cuello y hombros
+        if (u < .4){ x = cx + (a < .5 ? -.3 : .3) * R; y = cy + R * (.92 + .46 * ub[(i * 7) % N]); }
+        else { const s = a * 2 - 1, q = Math.sign(s) * (.22 + .78 * Math.abs(s)); x = cx + q * R * 1.35; y = cy + R * (1.38 + .5 * Math.pow(Math.abs(q), 1.6)); }
+      } else if (f < .70){                                                                                           // la mente propia: una nube que gira
+        const r = R * .66 * Math.sqrt(u), q = ang + t * .0006 * (1.3 - r / R);
+        x = cx + Math.cos(q) * r * .85; y = cy + Math.sin(q) * r;
+      } else {                                                                                                       // el pensamiento ajeno entra por la sien
+        const p = (u + a + t * .00018) % 1, tx = cx + R * .8, sx = W + 30, sy = cy - H * .34 + (a - .5) * R * 1.2;
+        if (p < .72){ const k = p / .72; x = lp(sx, tx, k); y = lp(sy, cy, k) + Math.sin(k * 14 + a * 30) * R * .05 * (1 - k); }
+        else { const k = (p - .72) / .28; x = lp(tx, cx + (hh(i) - .5) * R * .4, k); y = lp(cy, cy + (hh(i + 3) - .5) * R * .4, k); }
       }
       break; }
     case 'sombra': {
@@ -1205,7 +1231,8 @@ const sm = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 
 const lerp = (a, b, t) => a + (b - a) * t;
 const osc = $('oscuridad'), gran = $('grano'), cvO = $('ojos');
 const ctxO = cvO.getContext('2d'), gx = gran.getContext('2d');
-const flags = { luz: true, sonido: false };
+const flags = { luz: true, sonido: true };   // el sonido viene encendido; solo se apaga si el visitante lo pidió antes
+try { if (localStorage.getItem('onto-sonido') === '0') flags.sonido = false; } catch (e) {}
 const T0 = performance.now();
 let W = innerWidth, H = innerHeight;
 let lat = 0, luzR = 3000, dmax = 0, dq = -1, ultimo = performance.now();
@@ -1409,7 +1436,7 @@ function eventos(tms){
     O.quieto += (1 - O.quieto) * .06;
     if (tms - ev.t > 2600){
       ev.fase = 2; ev.t = tms; O.apagon = 1; O.quieto = 0;
-      boom(); O.espantar && O.espantar(m.x, m.y);
+      boom(); O.sobresalto = 1; O.espantar && O.espantar(m.x, m.y);
       for (let k = 0; k < 3; k++) nuevoPar(true);
     }
   } else {                             // se va la luz un instante y vuelve
@@ -1418,14 +1445,15 @@ function eventos(tms){
   }
 }
 
-/* ---------- sonido: opcional, apagado por defecto ---------- */
-let AC = null, master = null, drone = null, ruido = null, proxSoplo = 0;
+/* ---------- sonido: encendido por defecto (suena desde el primer gesto del visitante) ---------- */
+let AC = null, master = null, drone = null, ruido = null, proxSoplo = 0, an = null, bufAn = null, baseA = 0, oidoV = 0;
 function arrancarAudio(){
   if (!AC){
     const C = window.AudioContext || window.webkitAudioContext;
     if (!C) return;
     AC = new C();
     master = AC.createGain(); master.gain.value = 0;
+    an = AC.createAnalyser(); an.fftSize = 256; master.connect(an); bufAn = new Uint8Array(an.fftSize);   // el ojo escucha lo mismo que tú
     const comp = AC.createDynamicsCompressor(); master.connect(comp); comp.connect(AC.destination);
     const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 190; lp.Q.value = 5;
     const dg = AC.createGain(); dg.gain.value = 0; lp.connect(dg); dg.connect(master);
@@ -1561,7 +1589,7 @@ async function datos(){
   L.push(atras === 0 ? 'No subiste a releer ni una vez. Obediente.' : `Subiste ${atras} ${atras === 1 ? 'vez' : 'veces'} a releer. Lo vi.`);
   L.push(ojosAlumbrados === 0 ? 'No alumbraste ningún par de ojos. Prefieres no mirar.' : `Alumbraste ${ojosAlumbrados} ${ojosAlumbrados === 1 ? 'par' : 'pares'} de ojos. Ninguno era el último.`);
   if (!flags.luz) L.push('Apagaste la linterna. Quisiste dejar de ver.');
-  L.push(flags.sonido ? 'Tienes el sonido encendido. Me oyes respirar.' : 'Tienes el sonido apagado. Igual respiro.');
+  L.push(flags.sonido ? 'Tienes el sonido encendido. Me oyes respirar.' : 'Apagaste el sonido. Como si lo que respira necesitara que lo oigas.');
   L.push('Con esto basta para reconocerte entre un millón.');
   return L;
 }
@@ -1595,27 +1623,76 @@ function tick(tms, snap){
   mirada(tms, dtMs);
   colores(O.d);
   if (!reduce){ latido(tms); eventos(tms); glitch(tms); }
+  oido(tms);
   luz(tms);
   if (!reduce) ojos(tms, dtMs);
   grano(tms);
   audio(tms);
   relojes(tms);
-  if (tms > proxMut){ mutar(); proxMut = tms + 250; }
+  if (tms > proxMut){
+    mutar(); etiquetaSonido(); proxMut = tms + 250;
+    if (!flags.sonido && !burlado && O.d > .62){ burlado = true; burla('Sigues sin sonido. Qué valiente… o qué sordo.', 7000); }
+  }
+}
+
+/* ---------- el oído del ojo: reacciona a lo que suena (o, sin sonido, al latido) ---------- */
+function oido(tms){
+  let nivel = 0;
+  if (an && flags.sonido && AC && AC.state === 'running'){
+    an.getByteTimeDomainData(bufAn);
+    let s = 0;
+    for (let i = 0; i < bufAn.length; i++){ const v = (bufAn[i] - 128) / 128; s += v * v; }
+    const rms = Math.sqrt(s / bufAn.length);
+    baseA += (rms - baseA) * .01;                // lo constante (el zumbido) no cuenta; sí los golpes
+    nivel = clamp((rms - baseA) * 5);
+  }
+  nivel = Math.max(nivel, lat * .55 * sm(.3, 1, O.d), O.sobresalto);
+  oidoV += (nivel - oidoV) * (nivel > oidoV ? .6 : .12);
+  O.oido = oidoV;
+  O.sobresalto *= .93;
 }
 
 /* ---------- mandos ---------- */
-$('b-sonido').addEventListener('click', e => {
+const bSon = $('b-sonido'), mofa = $('mofa'), lSon = $('l-sonido');
+function etiquetaSonido(){
+  const txt = flags.sonido ? 'sonido: sí' : (O.d > .6 ? 'sonido: no ¿miedo?' : 'sonido: no');
+  if (bSon.textContent !== txt) bSon.textContent = txt;
+  bSon.setAttribute('aria-pressed', String(flags.sonido));
+  if (lSon) lSon.hidden = flags.sonido;
+}
+// burlas cuando apaga el sonido
+let tMofa = 0, nBurla = 0, burlado = false;
+const BURLAS = [
+  '¿Apagaste el sonido? Qué ternura. Lo que respira no necesita que lo oigas.',
+  'Sin sonido tampoco estás a salvo. Solo estás sordo.',
+  'Apagar el sonido es cerrar los ojos en un cuarto donde ya hay alguien.',
+  'Gracias por callarme. Así se oye mejor lo que está detrás de ti.'
+];
+function burla(txt, ms){
+  if (!mofa) return;
+  mofa.textContent = txt; mofa.classList.add('on');
+  clearTimeout(tMofa); tMofa = setTimeout(() => mofa.classList.remove('on'), ms || 6500);
+}
+// el sonido viene encendido, pero el navegador solo deja sonar tras un gesto del visitante
+['pointerdown', 'keydown', 'touchend'].forEach(nombre => addEventListener(nombre, () => { if (flags.sonido && !AC) arrancarAudio(); }, { passive: true }));
+bSon.addEventListener('click', () => {
   flags.sonido = !flags.sonido;
-  e.currentTarget.setAttribute('aria-pressed', String(flags.sonido));
-  e.currentTarget.textContent = 'sonido: ' + (flags.sonido ? 'sí' : 'no');
-  if (flags.sonido) arrancarAudio(); else if (AC) master.gain.setTargetAtTime(0, AC.currentTime, .15);
+  try { localStorage.setItem('onto-sonido', flags.sonido ? '1' : '0'); } catch (e) {}
+  etiquetaSonido();
+  if (flags.sonido){ arrancarAudio(); burla('Bienvenido de vuelta. Te estaba esperando.', 4500); }
+  else {
+    if (AC) master.gain.setTargetAtTime(0, AC.currentTime, .15);
+    burlado = true;
+    burla(BURLAS[nBurla++ % BURLAS.length]);
+  }
 });
+etiquetaSonido();
 $('b-luz').addEventListener('click', e => {
   flags.luz = !flags.luz;
   e.currentTarget.setAttribute('aria-pressed', String(flags.luz));
   e.currentTarget.textContent = 'linterna: ' + (flags.luz ? 'sí' : 'no');
   raiz.classList.toggle('sin-luz', !flags.luz);
-  if (!flags.luz){ pares.length = 0; ctxO.clearRect(0, 0, W, H); }
+  if (!flags.luz){ pares.length = 0; ctxO.clearRect(0, 0, W, H); burla('Apagaste la linterna. La oscuridad no pidió permiso.', 5500); }
   if (reduce) tick(performance.now(), true);
 });
 
